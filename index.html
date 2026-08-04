@@ -200,29 +200,22 @@
       { code: '08958628000610', name: '5. ONCOEXO PA (08.958.628/0006-10)' }
     ];
 
+    // Valóres padrão automáticos da instância Supabase "Bot Whatsapp"
+    const DEFAULT_SUPABASE_URL = "https://fpcobqmjcohzwjiqfpzc.supabase.co";
+    const DEFAULT_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwY29icW1qY29oendqaXFmcHpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4NjI0NTksImV4cCI6MjEwMTQzODQ1OX0.3JOL2Tu102oXnYeEog8Je4w7hhv0qWl3-1BXHf8O8j0";
+
     let supabaseClient = null;
     let todosUsuarios = [];
     let abaAtual = 'pendente';
 
     // Inicialização
     window.addEventListener('DOMContentLoaded', () => {
-      let savedUrl = localStorage.getItem('SUPABASE_URL') || '';
-      let savedKey = localStorage.getItem('SUPABASE_KEY') || '';
+      let savedUrl = localStorage.getItem('SUPABASE_URL') || DEFAULT_SUPABASE_URL;
+      let savedKey = localStorage.getItem('SUPABASE_KEY') || DEFAULT_SUPABASE_KEY;
 
-      if (savedUrl && savedKey) {
-        document.getElementById('cfgUrl').value = savedUrl;
-        document.getElementById('cfgKey').value = savedKey;
-        initSupabase(savedUrl, savedKey);
-      } else {
-        document.getElementById('configBanner').classList.remove('hidden');
-        document.getElementById('listaUsuarios').innerHTML = `
-          <tr>
-            <td colspan="6" class="py-12 text-center text-amber-400">
-              <i class="fa-solid fa-plug text-3xl mb-2"></i>
-              <p class="font-semibold">Configure o Supabase para carregar a lista de usuários.</p>
-            </td>
-          </tr>`;
-      }
+      document.getElementById('cfgUrl').value = savedUrl;
+      document.getElementById('cfgKey').value = savedKey;
+      initSupabase(savedUrl, savedKey);
     });
 
     function toggleConfigModal() {
@@ -249,7 +242,6 @@
     function initSupabase(url, key) {
       try {
         supabaseClient = supabase.createClient(url, key);
-        showToast('Conectado ao Supabase com sucesso!', 'success');
         carregarUsuarios();
       } catch (err) {
         showToast('Erro ao conectar ao Supabase: ' + err.message, 'error');
