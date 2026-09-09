@@ -139,7 +139,7 @@
               <th class="py-3.5 px-4">Data Solicitação</th>
               <th class="py-3.5 px-4">Status Atual</th>
               <th class="py-3.5 px-4">CNPJ Autorizado</th>
-              <th class="py-3.5 px-4 text-right">Ações de Aprovação</th>
+              <th class="py-3.5 px-4 text-right">Ações</th>
             </tr>
           </thead>
           <tbody id="listaUsuarios" class="divide-y divide-slate-800/60">
@@ -178,9 +178,14 @@
         </div>
       </div>
 
-      <div class="mt-6 flex justify-end gap-3">
-        <button onclick="toggleConfigModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl transition">Cancelar</button>
-        <button onclick="salvarConfiguracoes()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-600/30 transition">Salvar & Conectar</button>
+      <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
+        <button type="button" onclick="restaurarPadrao()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-arrow-rotate-left"></i> Restaurar Oficial
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="toggleConfigModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl transition">Cancelar</button>
+          <button type="button" onclick="salvarConfiguracoes()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-600/30 transition">Salvar & Conectar</button>
+        </div>
       </div>
     </div>
   </div>
@@ -200,33 +205,36 @@
       { code: '08958628000610', name: '5. ONCOEXO PA (08.958.628/0006-10)' }
     ];
 
-    const DEFAULT_SUPABASE_URL = 'https://fpcobqmjcohzwjiqfpzc.supabase.co';
-    const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwY29icW1qY29oendqaXFmcHpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4NjI0NTksImV4cCI6MjEwMTQzODQ1OX0.3JOL2Tu102oXnYeEog8Je4w7hhv0qWl3-1BXHf8O8j0';
+    const CONFIG_VERSION = 'v2_2026_oficial';
+    const DEFAULT_SUPABASE_URL = 'https://hfnpghxxaugqiyvnqqev.supabase.co';
+    const DEFAULT_SUPABASE_KEY = 'sb_publishable_WVXgO2IkqBoed58ZBtW0nw_C0YZvpHJ';
+    const OLD_DEPRECATED_REF = 'fpcobqmjcohzwjiqfpzc';
 
     let supabaseClient = null;
+    let realtimeChannel = null;
     let todosUsuarios = [];
     let abaAtual = 'pendente';
 
-    // Inicialização
+    // Inicialização com Auto-Migração de links antigos
     window.addEventListener('DOMContentLoaded', () => {
-      let savedUrl = localStorage.getItem('SUPABASE_URL') || DEFAULT_SUPABASE_URL;
-      let savedKey = localStorage.getItem('SUPABASE_KEY') || DEFAULT_SUPABASE_KEY;
+      let savedUrl = (localStorage.getItem('SUPABASE_URL') || '').trim();
+      let savedKey = (localStorage.getItem('SUPABASE_KEY') || '').trim();
+      const currentConfigVersion = localStorage.getItem('CONFIG_VERSION');
+
+      // Auto-migração: se a URL salva for a antiga/pausada, vazia ou versão não for a atual, redefine para o oficial
+      if (!savedUrl || !savedKey || savedUrl.includes(OLD_DEPRECATED_REF) || currentConfigVersion !== CONFIG_VERSION) {
+        console.log('Migrando automaticamente para o Supabase oficial da nova conta...');
+        savedUrl = DEFAULT_SUPABASE_URL;
+        savedKey = DEFAULT_SUPABASE_KEY;
+        localStorage.setItem('SUPABASE_URL', DEFAULT_SUPABASE_URL);
+        localStorage.setItem('SUPABASE_KEY', DEFAULT_SUPABASE_KEY);
+        localStorage.setItem('CONFIG_VERSION', CONFIG_VERSION);
+      }
 
       document.getElementById('cfgUrl').value = savedUrl;
       document.getElementById('cfgKey').value = savedKey;
 
-      if (savedUrl && savedKey) {
-        initSupabase(savedUrl, savedKey);
-      } else {
-        document.getElementById('configBanner').classList.remove('hidden');
-        document.getElementById('listaUsuarios').innerHTML = `
-          <tr>
-            <td colspan="6" class="py-12 text-center text-amber-400">
-              <i class="fa-solid fa-plug text-3xl mb-2"></i>
-              <p class="font-semibold">Configure o Supabase para carregar a lista de usuários.</p>
-            </td>
-          </tr>`;
-      }
+      initSupabase(savedUrl, savedKey);
     });
 
     function toggleConfigModal() {
@@ -234,17 +242,35 @@
       modal.classList.toggle('hidden');
     }
 
+    function restaurarPadrao() {
+      localStorage.setItem('SUPABASE_URL', DEFAULT_SUPABASE_URL);
+      localStorage.setItem('SUPABASE_KEY', DEFAULT_SUPABASE_KEY);
+      localStorage.setItem('CONFIG_VERSION', CONFIG_VERSION);
+      document.getElementById('cfgUrl').value = DEFAULT_SUPABASE_URL;
+      document.getElementById('cfgKey').value = DEFAULT_SUPABASE_KEY;
+      document.getElementById('configBanner').classList.add('hidden');
+      initSupabase(DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_KEY);
+      showToast('Conexão redefinida para o Supabase oficial!', 'success');
+      const modal = document.getElementById('configModal');
+      if (!modal.classList.contains('hidden')) {
+        modal.classList.add('hidden');
+      }
+    }
+
     function salvarConfiguracoes() {
-      const url = document.getElementById('cfgUrl').value.trim();
-      const key = document.getElementById('cfgKey').value.trim();
+      let url = document.getElementById('cfgUrl').value.trim();
+      let key = document.getElementById('cfgKey').value.trim();
 
       if (!url || !key) {
-        showToast('Por favor, preencha a URL e a Chave Anon.', 'error');
+        showToast('Por favor, preencha a URL e a Chave Anon/Publishable.', 'error');
         return;
       }
 
+      url = url.replace(/\/+$/, '');
+
       localStorage.setItem('SUPABASE_URL', url);
       localStorage.setItem('SUPABASE_KEY', key);
+      localStorage.setItem('CONFIG_VERSION', CONFIG_VERSION);
       document.getElementById('configBanner').classList.add('hidden');
       toggleConfigModal();
       initSupabase(url, key);
@@ -252,11 +278,30 @@
 
     function initSupabase(url, key) {
       try {
+        url = url.replace(/\/+$/, '');
         supabaseClient = supabase.createClient(url, key);
-        showToast('Conectado ao Supabase com sucesso!', 'success');
+        setupRealtime();
         carregarUsuarios();
       } catch (err) {
-        showToast('Erro ao conectar ao Supabase: ' + err.message, 'error');
+        showToast('Erro ao inicializar Supabase: ' + err.message, 'error');
+      }
+    }
+
+    function setupRealtime() {
+      if (!supabaseClient) return;
+      if (realtimeChannel) {
+        try { supabaseClient.removeChannel(realtimeChannel); } catch (e) {}
+      }
+      try {
+        realtimeChannel = supabaseClient
+          .channel('usuarios_whatsapp_changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios_whatsapp' }, (payload) => {
+            console.log('Realtime change detectado:', payload);
+            carregarUsuariosSilencioso();
+          })
+          .subscribe();
+      } catch (err) {
+        console.warn('Realtime subscription aviso:', err.message);
       }
     }
 
@@ -284,17 +329,59 @@
         atualizarEstatisticas();
         filtrarUsuarios();
       } catch (err) {
+        console.error('Erro ao consultar Supabase:', err);
         showToast('Erro ao carregar lista: ' + err.message, 'error');
+        const currentUrl = localStorage.getItem('SUPABASE_URL') || DEFAULT_SUPABASE_URL;
         tbody.innerHTML = `
           <tr>
-            <td colspan="6" class="py-12 text-center text-rose-400">
-              <i class="fa-solid fa-circle-xmark text-3xl mb-2"></i>
-              <p>Falha ao consultar tabela usuarios_whatsapp.</p>
-              <p class="text-xs text-slate-500 mt-1">${err.message}</p>
+            <td colspan="6" class="py-10 px-4 text-center">
+              <div class="max-w-md mx-auto flex flex-col items-center">
+                <i class="fa-solid fa-triangle-exclamation text-rose-400 text-3xl mb-3"></i>
+                <p class="font-bold text-sm text-rose-300">Falha ao consultar tabela usuarios_whatsapp</p>
+                <p class="text-xs text-slate-400 mt-1 mb-2 font-mono bg-slate-900/90 px-3 py-1 rounded-lg border border-slate-800">
+                  ${err.message}
+                </p>
+                <p class="text-[11px] text-slate-400 mb-4">
+                  Tentativa de conexão com: <span class="text-slate-300 font-mono">${currentUrl}</span>
+                </p>
+                <div class="flex items-center gap-3">
+                  <button onclick="restaurarPadrao()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold text-xs shadow-lg shadow-blue-600/30 transition flex items-center gap-2">
+                    <i class="fa-solid fa-rotate"></i> Conectar ao Supabase Oficial da Conta Nova
+                  </button>
+                  <button onclick="toggleConfigModal()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-medium text-xs border border-slate-700 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-gear"></i> Configurar Manualmente
+                  </button>
+                </div>
+              </div>
             </td>
           </tr>`;
       }
     }
+
+    async function carregarUsuariosSilencioso() {
+      if (!supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from('usuarios_whatsapp')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          todosUsuarios = data;
+          atualizarEstatisticas();
+          filtrarUsuarios();
+        }
+      } catch (err) {
+        console.warn('Erro silencioso ao sincronizar usuários:', err.message);
+      }
+    }
+
+    // Polling suave em background a cada 30 segundos se a página estiver ativa
+    setInterval(() => {
+      if (supabaseClient && !document.hidden) {
+        carregarUsuariosSilencioso();
+      }
+    }, 30000);
 
     function atualizarEstatisticas() {
       const pendentes = todosUsuarios.filter(u => u.status === 'pendente').length;
@@ -381,7 +468,10 @@
         return `
           <tr class="hover:bg-slate-900/50 transition">
             <td class="py-3.5 px-4">
-              <div class="font-semibold text-white">${u.nome || 'Sem Nome'}</div>
+              <div class="font-semibold text-white flex items-center gap-2">
+                ${u.nome || 'Sem Nome'}
+                ${u.is_admin ? '<span class="px-1.5 py-0.5 rounded bg-blue-600/20 text-blue-400 border border-blue-500/30 text-[9px] font-bold flex items-center gap-1"><i class="fa-solid fa-shield-halved"></i> Admin</span>' : ''}
+              </div>
               <div class="text-slate-400 text-[11px] flex items-center gap-1 mt-0.5">
                 <i class="fa-brands fa-whatsapp text-emerald-400"></i> ${cleanPhone}
               </div>
@@ -396,16 +486,34 @@
               </select>
             </td>
             <td class="py-3.5 px-4 text-right">
-              <div class="flex items-center justify-end gap-2">
+              <div class="flex items-center justify-end gap-1.5">
                 <button onclick="alterarStatus('${u.chat_id}', 'aprovado')" 
                   title="Aprovar Acesso"
-                  class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 transition flex items-center gap-1">
+                  class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 transition flex items-center gap-1">
                   <i class="fa-solid fa-check"></i> Aprovar
                 </button>
                 <button onclick="alterarStatus('${u.chat_id}', 'bloqueado')" 
                   title="Bloquear Acesso"
-                  class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-600/80 text-slate-300 hover:text-white border border-slate-700 hover:border-rose-500 font-semibold text-xs transition flex items-center gap-1">
+                  class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-600/80 text-slate-300 hover:text-white border border-slate-700 hover:border-rose-500 font-semibold text-xs transition flex items-center gap-1">
                   <i class="fa-solid fa-ban"></i> Bloquear
+                </button>
+                
+                <div class="h-6 w-px bg-slate-800 mx-1"></div>
+
+                <button onclick="alternarAdmin('${u.chat_id}', '${u.nome ? u.nome.replace(/'/g, "\\'") : ''}', ${!!u.is_admin})" 
+                  title="${u.is_admin ? 'Remover Permissão de Admin' : 'Dar Permissão de Admin'}" 
+                  class="p-1.5 rounded-xl border transition ${u.is_admin ? 'bg-blue-600/20 text-blue-400 border-blue-500/30 hover:bg-blue-600/30' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white'}">
+                  <i class="fa-solid fa-shield-halved"></i>
+                </button>
+                <button onclick="editarUsuario('${u.chat_id}', '${u.nome ? u.nome.replace(/'/g, "\\'") : ''}', '${u.cpf || ''}')" 
+                  title="Editar Dados" 
+                  class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 hover:text-white transition">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button onclick="excluirUsuario('${u.chat_id}', '${u.nome ? u.nome.replace(/'/g, "\\'") : ''}')" 
+                  title="Excluir Usuário" 
+                  class="p-1.5 rounded-xl bg-slate-800 hover:bg-rose-950 hover:text-rose-400 text-slate-300 border border-slate-700 hover:border-rose-900 transition">
+                  <i class="fa-solid fa-trash"></i>
                 </button>
               </div>
             </td>
@@ -434,9 +542,95 @@
         if (error) throw error;
 
         showToast(`Usuário ${novoStatus === 'aprovado' ? 'aprovado com sucesso' : 'bloqueado'}!`, novoStatus === 'aprovado' ? 'success' : 'info');
-        await carregarUsuarios();
+        await carregarUsuariosSilencioso();
       } catch (err) {
         showToast('Erro ao atualizar status: ' + err.message, 'error');
+      }
+    }
+
+    async function alternarAdmin(chatId, nome, eAdmin) {
+      if (!supabaseClient) return;
+
+      const novoStatusAdmin = !eAdmin;
+      const acao = novoStatusAdmin ? "tornar" : "remover";
+      if (!confirm(`Deseja ${acao} o usuário "${nome}" como Administrador do sistema?`)) {
+        return;
+      }
+
+      try {
+        const { error } = await supabaseClient
+          .from('usuarios_whatsapp')
+          .update({
+            is_admin: novoStatusAdmin,
+            updated_at: new Date().toISOString()
+          })
+          .eq('chat_id', chatId);
+
+        if (error) throw error;
+
+        showToast(`Usuário ${novoStatusAdmin ? "promovido a" : "removido de"} administrador!`, "success");
+        await carregarUsuariosSilencioso();
+      } catch (err) {
+        showToast("Erro ao alterar permissão de admin: " + err.message, "error");
+      }
+    }
+
+    async function editarUsuario(chatId, nomeAtual, cpfAtual) {
+      if (!supabaseClient) return;
+
+      const novoNome = prompt("Digite o novo Nome Completo:", nomeAtual);
+      if (novoNome === null) return; // Cancelou
+      if (novoNome.trim().length < 2) {
+        alert("Nome inválido! Deve conter pelo menos 2 caracteres.");
+        return;
+      }
+
+      const novoCpf = prompt("Digite o novo CPF (apenas 11 números):", cpfAtual);
+      if (novoCpf === null) return; // Cancelou
+      const cleanCpf = novoCpf.replace(/\D/g, '');
+      if (cleanCpf.length !== 11) {
+        alert("CPF inválido! Deve conter exatamente 11 dígitos numéricos.");
+        return;
+      }
+
+      try {
+        const { error } = await supabaseClient
+          .from('usuarios_whatsapp')
+          .update({
+            nome: novoNome.trim(),
+            cpf: cleanCpf,
+            updated_at: new Date().toISOString()
+          })
+          .eq('chat_id', chatId);
+
+        if (error) throw error;
+
+        showToast("Dados do usuário atualizados com sucesso!", "success");
+        await carregarUsuariosSilencioso();
+      } catch (err) {
+        showToast("Erro ao editar dados: " + err.message, "error");
+      }
+    }
+
+    async function excluirUsuario(chatId, nome) {
+      if (!supabaseClient) return;
+
+      if (!confirm(`⚠️ ATENÇÃO!\n\nTem certeza que deseja excluir permanentemente o usuário "${nome}"?\n\nEle será removido do controle de acesso e poderá realizar um novo cadastro pelo WhatsApp quando desejar.`)) {
+        return;
+      }
+
+      try {
+        const { error } = await supabaseClient
+          .from('usuarios_whatsapp')
+          .delete()
+          .eq('chat_id', chatId);
+
+        if (error) throw error;
+
+        showToast("Usuário excluído com sucesso!", "success");
+        await carregarUsuariosSilencioso();
+      } catch (err) {
+        showToast("Erro ao excluir usuário: " + err.message, "error");
       }
     }
 
