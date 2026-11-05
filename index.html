@@ -32,8 +32,8 @@
         <i class="fa-solid font-bold fa-shield-halved"></i>
       </div>
       <div>
-        <h1 class="text-lg font-bold tracking-tight text-white">LE Logística - Controle de Acesso</h1>
-        <p class="text-xs text-slate-400">Painel Administrativo de Aprovação WhatsApp</p>
+        <h1 class="text-lg font-bold tracking-tight text-white">LE Logística - Controle de Acesso por CNPJ</h1>
+        <p class="text-xs text-slate-400">Painel Administrativo de Aprovação e Vínculo de Clientes WhatsApp</p>
       </div>
     </div>
     
@@ -124,9 +124,9 @@
       </div>
 
       <!-- Search Input -->
-      <div class="relative w-full md:w-72">
+      <div class="relative w-full md:w-80">
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-        <input type="text" id="searchInput" oninput="filtrarUsuarios()" placeholder="Buscar por Nome, CPF ou WhatsApp..." 
+        <input type="text" id="searchInput" oninput="filtrarUsuarios()" placeholder="Buscar por Nome, CPF, WhatsApp ou CNPJ..." 
           class="w-full bg-slate-900/80 border border-slate-700/80 text-white text-xs rounded-xl pl-9 pr-4 py-2 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" />
       </div>
     </div>
@@ -141,7 +141,7 @@
               <th class="py-3.5 px-4">CPF</th>
               <th class="py-3.5 px-4">Data Solicitação</th>
               <th class="py-3.5 px-4">Status Atual</th>
-              <th class="py-3.5 px-4">CNPJ Autorizado</th>
+              <th class="py-3.5 px-4">CNPJs Autorizados (Clientes)</th>
               <th class="py-3.5 px-4 text-right">Ações</th>
             </tr>
           </thead>
@@ -159,6 +159,63 @@
     </div>
 
   </main>
+
+  <!-- Modal Gerenciador de CNPJs do Usuário -->
+  <div id="cnpjModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass max-w-lg w-full p-6 rounded-2xl shadow-2xl border border-slate-700 relative">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-building-shield text-emerald-400"></i> Vincular CNPJs ao Usuário
+        </h3>
+        <button onclick="fecharModalCnpj()" class="text-slate-400 hover:text-white text-sm">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p id="cnpjModalUserSubtitle" class="text-xs text-slate-300 font-medium mb-3"></p>
+
+      <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 mb-4 text-[11px] text-blue-200 leading-relaxed">
+        <i class="fa-solid fa-circle-info text-blue-400 mr-1"></i>
+        <strong>Regra de Raiz de CNPJ:</strong> Ao liberar o CNPJ de um cliente (ex: <code>08.958.628/0001-06</code> da Oncoexo), o bot libera automaticamente a consulta de todas as notas fiscais que envolvam a mesma raiz (<code>08.958.628/...</code>). Se o usuário tiver apenas 1 CNPJ vinculado, o bot consulta direto sem exibir menu.
+      </div>
+
+      <!-- Atalhos Rápidos -->
+      <div class="mb-4">
+        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Atalhos Rápidos (Clique para adicionar/remover)</label>
+        <div id="atalhosCnpjContainer" class="flex flex-wrap gap-1.5"></div>
+      </div>
+
+      <!-- Adicionar Novo CNPJ Livremente -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 mb-4">
+        <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-2">
+          <i class="fa-solid fa-plus text-emerald-400 mr-1"></i> Digitar Novo CNPJ de Cliente
+        </label>
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+          <input type="text" id="novoCnpjNome" placeholder="Nome do Cliente (ex: ONCOEXO)" 
+            class="sm:col-span-5 bg-slate-950 border border-slate-700 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500" />
+          <input type="text" id="novoCnpjNumero" placeholder="CNPJ (ex: 08.958.628/0001-06)" maxlength="18" oninput="mascaraCnpjInput(this)"
+            class="sm:col-span-5 bg-slate-950 border border-slate-700 text-white text-xs font-mono rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500" />
+          <button type="button" onclick="adicionarCnpjCustomizadoModal()" 
+            class="sm:col-span-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg px-3 py-2 transition flex items-center justify-center gap-1">
+            <i class="fa-solid fa-plus"></i> Add
+          </button>
+        </div>
+      </div>
+
+      <!-- Lista de CNPJs Atribuídos ao Usuário -->
+      <div class="mb-5">
+        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">CNPJs Selecionados para este Usuário</label>
+        <div id="listaCnpjsSelecionadosModal" class="min-h-[54px] bg-slate-900/60 border border-slate-800 rounded-xl p-3 flex flex-wrap gap-2 items-center"></div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2">
+        <button type="button" onclick="fecharModalCnpj()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl transition">Cancelar</button>
+        <button type="button" onclick="salvarCnpjsModal(false)" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition">Apenas Salvar CNPJs</button>
+        <button type="button" onclick="salvarCnpjsModal(true)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-check"></i> Salvar & Aprovar Usuário
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal Configuração Supabase -->
   <div id="configModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
@@ -198,17 +255,18 @@
 
   <!-- JavaScript Logic -->
   <script>
-    // Unidades / CNPJs disponíveis
-    const EMPRESAS = [
-      { code: 'ALL', name: '🟢 TODAS AS UNIDADES (Acesso Total)' },
-      { code: '48404961000198', name: '1. LE LOGÍSTICA (48.404.961/0001-98)' },
-      { code: '08958628000297', name: '2. ONCOEXO PB (08.958.628/0002-97)' },
-      { code: '08958628000378', name: '3. ONCOEXO CE (08.958.628/0003-78)' },
-      { code: '08958628000459', name: '4. ONCOEXO BA (08.958.628/0004-59)' },
-      { code: '08958628000610', name: '5. ONCOEXO PA (08.958.628/0006-10)' }
+    // Catálogo Base de Clientes / CNPJs
+    const EMPRESAS_BASE = [
+      { code: 'ALL', name: '🟢 TODAS AS EMPRESAS (Acesso Global)' },
+      { code: 'ONCOEXO:08958628000106', name: '🟣 ONCOEXO (08.958.628/0001-06 - Matriz e Filiais)' },
+      { code: 'LE LOGÍSTICA:48404961000198', name: '🔵 LE LOGÍSTICA (48.404.961/0001-98)' },
+      { code: 'ONCOEXO PB:08958628000297', name: 'ONCOEXO PB (08.958.628/0002-97)' },
+      { code: 'ONCOEXO CE:08958628000378', name: 'ONCOEXO CE (08.958.628/0003-78)' },
+      { code: 'ONCOEXO BA:08958628000459', name: 'ONCOEXO BA (08.958.628/0004-59)' },
+      { code: 'ONCOEXO PA:08958628000610', name: 'ONCOEXO PA (08.958.628/0006-10)' }
     ];
 
-    const CONFIG_VERSION = 'v2_2026_oficial';
+    const CONFIG_VERSION = 'v3_2026_multi_cnpj';
     const DEFAULT_SUPABASE_URL = 'https://hfnpghxxaugqiyvnqqev.supabase.co';
     const DEFAULT_SUPABASE_KEY = 'sb_publishable_WVXgO2IkqBoed58ZBtW0nw_C0YZvpHJ';
     const OLD_DEPRECATED_REF = 'fpcobqmjcohzwjiqfpzc';
@@ -218,15 +276,87 @@
     let todosUsuarios = [];
     let abaAtual = 'pendente';
 
-    // Inicialização com Auto-Migração de links antigos
+    // Estado do Modal de CNPJs
+    let modalTargetChatId = null;
+    let modalSelectedCodes = [];
+
+    function getCustomEmpresasSalvas() {
+      try {
+        return JSON.parse(localStorage.getItem('CUSTOM_EMPRESAS_LELOG') || '[]');
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function salvarCustomEmpresaCatalogo(code, name) {
+      const list = getCustomEmpresasSalvas();
+      if (!list.some(item => item.code === code) && !EMPRESAS_BASE.some(item => item.code === code)) {
+        list.push({ code, name });
+        localStorage.setItem('CUSTOM_EMPRESAS_LELOG', JSON.stringify(list));
+      }
+    }
+
+    function getTodasEmpresasCatalogo() {
+      return [...EMPRESAS_BASE, ...getCustomEmpresasSalvas()];
+    }
+
+    function formatCnpjDisplay(rawDigits) {
+      const clean = String(rawDigits || '').replace(/\D/g, '');
+      if (clean.length === 14) {
+        return clean.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+      }
+      return rawDigits;
+    }
+
+    function mascaraCnpjInput(input) {
+      let v = input.value.replace(/\D/g, '').slice(0, 14);
+      if (v.length > 12) v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, '$1.$2.$3/$4-$5');
+      else if (v.length > 8) v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{1,4})/, '$1.$2.$3/$4');
+      else if (v.length > 5) v = v.replace(/^(\d{2})(\d{3})(\d{1,3})/, '$1.$2.$3');
+      else if (v.length > 2) v = v.replace(/^(\d{2})(\d{1,3})/, '$1.$2');
+      input.value = v;
+    }
+
+    function parseCnpjAutorizadoList(rawStr) {
+      if (!rawStr) return [];
+      const trimmed = String(rawStr).trim();
+      if (!trimmed) return [];
+      if (trimmed.toUpperCase() === 'ALL') return ['ALL'];
+      return trimmed.split(/[,;|]+/).map(s => s.trim()).filter(Boolean);
+    }
+
+    function formatCnpjTokenBadge(token) {
+      if (!token) return '';
+      if (token.toUpperCase() === 'ALL') {
+        return `<span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[11px] font-semibold">🟢 TODOS OS CNPJs (ALL)</span>`;
+      }
+      let label = '';
+      let digits = token;
+      if (token.includes(':')) {
+        const pts = token.split(':');
+        label = pts[0].trim();
+        digits = pts.slice(1).join(':').trim();
+      }
+      const clean = digits.replace(/\D/g, '');
+      const fmt = formatCnpjDisplay(clean);
+
+      if (!label) {
+        if (clean === '48404961000198') label = 'LE LOGÍSTICA';
+        else if (clean === '08958628000106') label = 'ONCOEXO (Matriz/Filiais)';
+        else if (clean.startsWith('08958628')) label = 'ONCOEXO';
+      }
+
+      const display = label ? `<strong>${label}:</strong> ${fmt}` : fmt;
+      return `<span class="px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-200 border border-blue-500/30 text-[11px] font-mono">${display}</span>`;
+    }
+
+    // Inicialização com Auto-Migração
     window.addEventListener('DOMContentLoaded', () => {
       let savedUrl = (localStorage.getItem('SUPABASE_URL') || '').trim();
       let savedKey = (localStorage.getItem('SUPABASE_KEY') || '').trim();
       const currentConfigVersion = localStorage.getItem('CONFIG_VERSION');
 
-      // Auto-migração: se a URL salva for a antiga/pausada, vazia ou versão não for a atual, redefine para o oficial
       if (!savedUrl || !savedKey || savedUrl.includes(OLD_DEPRECATED_REF) || currentConfigVersion !== CONFIG_VERSION) {
-        console.log('Migrando automaticamente para o Supabase oficial da nova conta...');
         savedUrl = DEFAULT_SUPABASE_URL;
         savedKey = DEFAULT_SUPABASE_KEY;
         localStorage.setItem('SUPABASE_URL', DEFAULT_SUPABASE_URL);
@@ -298,8 +428,7 @@
       try {
         realtimeChannel = supabaseClient
           .channel('usuarios_whatsapp_changes')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios_whatsapp' }, (payload) => {
-            console.log('Realtime change detectado:', payload);
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios_whatsapp' }, () => {
             carregarUsuariosSilencioso();
           })
           .subscribe();
@@ -349,7 +478,7 @@
                 </p>
                 <div class="flex items-center gap-3">
                   <button onclick="restaurarPadrao()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold text-xs shadow-lg shadow-blue-600/30 transition flex items-center gap-2">
-                    <i class="fa-solid fa-rotate"></i> Conectar ao Supabase Oficial da Conta Nova
+                    <i class="fa-solid fa-rotate"></i> Conectar ao Supabase Oficial
                   </button>
                   <button onclick="toggleConfigModal()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-medium text-xs border border-slate-700 transition flex items-center gap-1.5">
                     <i class="fa-solid fa-gear"></i> Configurar Manualmente
@@ -379,11 +508,12 @@
       }
     }
 
-    // Polling suave em background a cada 30 segundos se a página estiver ativa
+    // Polling suave em background a cada 30 segundos + Keep-Alive no Render
     setInterval(() => {
       if (supabaseClient && !document.hidden) {
         carregarUsuariosSilencioso();
       }
+      fetch('https://bot-whatsapp-lelogistica.onrender.com/healthz', { mode: 'no-cors' }).catch(() => {});
     }, 30000);
 
     function atualizarEstatisticas() {
@@ -426,7 +556,8 @@
         filtrados = filtrados.filter(u => 
           (u.nome && u.nome.toLowerCase().includes(query)) ||
           (u.cpf && u.cpf.toLowerCase().includes(query)) ||
-          (u.chat_id && u.chat_id.toLowerCase().includes(query))
+          (u.chat_id && u.chat_id.toLowerCase().includes(query)) ||
+          (u.cnpj_autorizado && u.cnpj_autorizado.toLowerCase().includes(query))
         );
       }
 
@@ -447,16 +578,29 @@
         return;
       }
 
+      const catalogo = getTodasEmpresasCatalogo();
+
       tbody.innerHTML = usuarios.map(u => {
         const dataFmt = u.created_at ? new Date(u.created_at).toLocaleString('pt-BR') : 'N/A';
         const cleanPhone = u.chat_id.replace('@c.us', '');
+        const safeId = u.chat_id.replace(/[^a-zA-Z0-9]/g, '_');
 
-        // Options for CNPJ select
-        const optionsHtml = EMPRESAS.map(e => `
-          <option value="${e.code}" ${u.cnpj_autorizado === e.code ? 'selected' : ''}>
-            ${e.name}
-          </option>
-        `).join('');
+        const tokens = parseCnpjAutorizadoList(u.cnpj_autorizado);
+        const badgesHtml = tokens.length > 0
+          ? tokens.map(formatCnpjTokenBadge).join(' ')
+          : `<span class="text-slate-500 italic text-[11px]">Nenhum CNPJ atribuído</span>`;
+
+        const currentVal = u.cnpj_autorizado || 'ONCOEXO:08958628000106';
+        const isCustomMulti = tokens.length > 1 || (tokens.length === 1 && !catalogo.some(e => e.code === tokens[0]));
+
+        const optionsHtml = [
+          ...(isCustomMulti ? [`<option value="${currentVal.replace(/"/g, '&quot;')}" selected>📌 Personalizado (${tokens.length} CNPJ${tokens.length > 1 ? 's' : ''})</option>`] : []),
+          ...catalogo.map(e => `
+            <option value="${e.code}" ${!isCustomMulti && currentVal === e.code ? 'selected' : ''}>
+              ${e.name}
+            </option>
+          `)
+        ].join('');
 
         // Badge Status
         let badgeHtml = '';
@@ -482,16 +626,24 @@
             <td class="py-3.5 px-4 font-mono text-slate-300">${u.cpf || 'N/A'}</td>
             <td class="py-3.5 px-4 text-slate-400">${dataFmt}</td>
             <td class="py-3.5 px-4">${badgeHtml}</td>
-            <td class="py-3.5 px-4 min-w-[220px]">
-              <select id="cnpj_select_${u.chat_id.replace(/[^a-zA-Z0-9]/g, '_')}" 
-                class="w-full bg-slate-900 border border-slate-700/80 text-white text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-blue-500">
-                ${optionsHtml}
-              </select>
+            <td class="py-3.5 px-4 min-w-[280px]">
+              <div class="flex flex-wrap gap-1 mb-1.5">${badgesHtml}</div>
+              <div class="flex items-center gap-1.5">
+                <select id="cnpj_select_${safeId}" 
+                  class="flex-1 bg-slate-900 border border-slate-700/80 text-white text-[11px] rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-blue-500">
+                  ${optionsHtml}
+                </select>
+                <button onclick="abrirModalCnpj('${u.chat_id}')" 
+                  title="Adicionar / Digitar um ou mais CNPJs personalizados"
+                  class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-blue-600/30 text-blue-300 border border-slate-700 hover:border-blue-500/50 text-[11px] font-semibold transition flex items-center gap-1 whitespace-nowrap">
+                  <i class="fa-solid fa-plus"></i> +CNPJ
+                </button>
+              </div>
             </td>
             <td class="py-3.5 px-4 text-right">
               <div class="flex items-center justify-end gap-1.5">
                 <button onclick="alterarStatus('${u.chat_id}', 'aprovado')" 
-                  title="Aprovar Acesso"
+                  title="Aprovar Acesso com o(s) CNPJ(s) selecionado(s)"
                   class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 transition flex items-center gap-1">
                   <i class="fa-solid fa-check"></i> Aprovar
                 </button>
@@ -525,12 +677,147 @@
       }).join('');
     }
 
+    // Funções do Modal Gerenciador de CNPJs
+    function abrirModalCnpj(chatId) {
+      const user = todosUsuarios.find(u => u.chat_id === chatId);
+      if (!user) return;
+
+      modalTargetChatId = chatId;
+      modalSelectedCodes = parseCnpjAutorizadoList(user.cnpj_autorizado);
+      if (modalSelectedCodes.length === 0) {
+        modalSelectedCodes = ['ONCOEXO:08958628000106'];
+      }
+
+      document.getElementById('cnpjModalUserSubtitle').innerText = `Usuário: ${user.nome || 'Sem Nome'} (${user.chat_id.replace('@c.us', '')})`;
+      document.getElementById('novoCnpjNome').value = '';
+      document.getElementById('novoCnpjNumero').value = '';
+
+      renderizarModalCnpj();
+      document.getElementById('cnpjModal').classList.remove('hidden');
+    }
+
+    function fecharModalCnpj() {
+      document.getElementById('cnpjModal').classList.add('hidden');
+      modalTargetChatId = null;
+    }
+
+    function alternarAtalhoModal(code) {
+      if (code === 'ALL') {
+        modalSelectedCodes = ['ALL'];
+      } else {
+        modalSelectedCodes = modalSelectedCodes.filter(c => c !== 'ALL');
+        if (modalSelectedCodes.includes(code)) {
+          modalSelectedCodes = modalSelectedCodes.filter(c => c !== code);
+        } else {
+          modalSelectedCodes.push(code);
+        }
+      }
+      renderizarModalCnpj();
+    }
+
+    function removerCnpjSelecionadoModal(code) {
+      modalSelectedCodes = modalSelectedCodes.filter(c => c !== code);
+      renderizarModalCnpj();
+    }
+
+    function adicionarCnpjCustomizadoModal() {
+      const nomeInput = document.getElementById('novoCnpjNome').value.trim().replace(/[,:|]/g, '');
+      const numInput = document.getElementById('novoCnpjNumero').value.replace(/\D/g, '');
+
+      if (numInput.length !== 14) {
+        showToast('Digite um CNPJ válido com 14 dígitos numéricos.', 'error');
+        return;
+      }
+
+      const token = nomeInput ? `${nomeInput.toUpperCase()}:${numInput}` : numInput;
+      const displayName = nomeInput
+        ? `${nomeInput.toUpperCase()} (${formatCnpjDisplay(numInput)})`
+        : `CNPJ ${formatCnpjDisplay(numInput)}`;
+
+      salvarCustomEmpresaCatalogo(token, displayName);
+
+      modalSelectedCodes = modalSelectedCodes.filter(c => c !== 'ALL');
+      if (!modalSelectedCodes.includes(token)) {
+        modalSelectedCodes.push(token);
+      }
+
+      document.getElementById('novoCnpjNome').value = '';
+      document.getElementById('novoCnpjNumero').value = '';
+      renderizarModalCnpj();
+      showToast('CNPJ adicionado à lista do usuário!', 'success');
+    }
+
+    function renderizarModalCnpj() {
+      const catalogo = getTodasEmpresasCatalogo();
+      const atalhosEl = document.getElementById('atalhosCnpjContainer');
+      atalhosEl.innerHTML = catalogo.map(item => {
+        const ativo = modalSelectedCodes.includes(item.code);
+        return `
+          <button type="button" onclick="alternarAtalhoModal('${item.code.replace(/'/g, "\\'")}')"
+            class="px-2.5 py-1 rounded-lg text-[11px] font-medium border transition ${
+              ativo
+                ? 'bg-emerald-600/25 text-emerald-300 border-emerald-500/50 shadow-sm'
+                : 'bg-slate-900 text-slate-400 border-slate-700 hover:text-white hover:bg-slate-800'
+            }">
+            ${ativo ? '<i class="fa-solid fa-check mr-1"></i>' : ''}${item.name}
+          </button>
+        `;
+      }).join('');
+
+      const selEl = document.getElementById('listaCnpjsSelecionadosModal');
+      if (modalSelectedCodes.length === 0) {
+        selEl.innerHTML = `<span class="text-xs text-slate-500 italic">Nenhum CNPJ selecionado. Clique em um atalho acima ou digite um novo CNPJ.</span>`;
+        return;
+      }
+
+      selEl.innerHTML = modalSelectedCodes.map(code => `
+        <div class="flex items-center gap-1.5 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
+          <span>${code === 'ALL' ? '🟢 TODOS OS CNPJs (ALL)' : code.replace(':', ' — ')}</span>
+          <button type="button" onclick="removerCnpjSelecionadoModal('${code.replace(/'/g, "\\'")}')" class="text-rose-400 hover:text-rose-300 ml-1">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    async function salvarCnpjsModal(aprovarTambem) {
+      if (!supabaseClient || !modalTargetChatId) return;
+      if (modalSelectedCodes.length === 0) {
+        showToast('Selecione ou adicione pelo menos 1 CNPJ antes de salvar.', 'error');
+        return;
+      }
+
+      const valorFinal = modalSelectedCodes.join(', ');
+      const payload = {
+        cnpj_autorizado: valorFinal,
+        updated_at: new Date().toISOString()
+      };
+      if (aprovarTambem) {
+        payload.status = 'aprovado';
+      }
+
+      try {
+        const { error } = await supabaseClient
+          .from('usuarios_whatsapp')
+          .update(payload)
+          .eq('chat_id', modalTargetChatId);
+
+        if (error) throw error;
+
+        showToast(aprovarTambem ? 'CNPJs vinculados e usuário aprovado!' : 'CNPJs atualizados com sucesso!', 'success');
+        fecharModalCnpj();
+        await carregarUsuariosSilencioso();
+      } catch (err) {
+        showToast('Erro ao salvar CNPJs: ' + err.message, 'error');
+      }
+    }
+
     async function alterarStatus(chatId, novoStatus) {
       if (!supabaseClient) return;
 
       const elementId = 'cnpj_select_' + chatId.replace(/[^a-zA-Z0-9]/g, '_');
       const selectElem = document.getElementById(elementId);
-      const cnpjSelecionado = selectElem ? selectElem.value : 'ALL';
+      const cnpjSelecionado = selectElem ? selectElem.value : 'ONCOEXO:08958628000106';
 
       try {
         const { error } = await supabaseClient
@@ -582,14 +869,14 @@
       if (!supabaseClient) return;
 
       const novoNome = prompt("Digite o novo Nome Completo:", nomeAtual);
-      if (novoNome === null) return; // Cancelou
+      if (novoNome === null) return;
       if (novoNome.trim().length < 2) {
         alert("Nome inválido! Deve conter pelo menos 2 caracteres.");
         return;
       }
 
       const novoCpf = prompt("Digite o novo CPF (apenas 11 números):", cpfAtual);
-      if (novoCpf === null) return; // Cancelou
+      if (novoCpf === null) return;
       const cleanCpf = novoCpf.replace(/\D/g, '');
       if (cleanCpf.length !== 11) {
         alert("CPF inválido! Deve conter exatamente 11 dígitos numéricos.");
