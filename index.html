@@ -6,8 +6,27 @@
   <title>Controle de Acesso por CNPJ - LE Logística Especializada</title>
   <!-- WhatsApp Favicon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%23dc2626' d='M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z'/%3E%3C/svg%3E" />
-  <!-- Tailwind CSS -->
+  
+  <!-- Script anti-flicker para tema inicial -->
+  <script>
+    if (localStorage.getItem('THEME_MODE') === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+
+  <!-- Tailwind CSS com suporte a Dark Mode via classe -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {}
+      }
+    };
+  </script>
+
   <!-- Google Fonts Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,12 +41,14 @@
     .font-mono { font-family: 'JetBrains Mono', monospace; }
     /* Animações e scrollbars refinadas */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .dark ::-webkit-scrollbar-thumb { background: #334155; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
   </style>
 </head>
-<body class="h-full flex flex-col bg-slate-100 text-slate-800 antialiased selection:bg-red-500 selection:text-white">
+<body class="h-full flex flex-col bg-slate-100 dark:bg-[#0d1117] text-slate-800 dark:text-slate-100 antialiased selection:bg-red-500 selection:text-white transition-colors duration-200">
 
   <!-- ===================================================================== -->
   <!-- 1. HEADER SUPERIOR OFICIAL (Estilo Dark Minimalista com Acento Vermelho)-->
@@ -69,10 +90,19 @@
         </div>
       </div>
 
-      <!-- Ações do Header -->
-      <div class="flex items-center gap-2.5 self-end sm:self-auto">
+      <!-- Ações do Header: Alternador de Tema + Configurar Supabase -->
+      <div class="flex items-center gap-2 self-end sm:self-auto">
+        
+        <!-- Botão Alternador de Tema (Dark / Light) -->
+        <button onclick="toggleTheme()" id="btnThemeToggle"
+          title="Alternar entre Tema Claro e Escuro"
+          class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium border border-slate-700/80 transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+          <i id="themeToggleIcon" class="fa-solid fa-moon text-slate-400 text-xs"></i>
+          <span id="themeToggleText">Tema Escuro</span>
+        </button>
+
         <button onclick="toggleConfigModal()" 
-          class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium border border-slate-700/80 transition flex items-center gap-2 shadow-sm">
+          class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium border border-slate-700/80 transition flex items-center gap-2 shadow-sm cursor-pointer">
           <i class="fa-solid fa-gear text-slate-400"></i> Configurar Supabase
         </button>
       </div>
@@ -81,20 +111,20 @@
   </header>
 
   <!-- ===================================================================== -->
-  <!-- 2. CORPO PRINCIPAL (Dashboard Off-White / Clean Corporativo) -->
+  <!-- 2. CORPO PRINCIPAL (Dashboard Responsivo: Light Clean / Dark Modern) -->
   <!-- ===================================================================== -->
   <main class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
 
     <!-- Topo da Página: Breadcrumbs + Título + Botão Atualizar Vermelho -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+        <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">
           <span>Administração</span>
           <span>/</span>
-          <span class="text-slate-600">Acessos</span>
+          <span class="text-slate-600 dark:text-slate-400">Acessos</span>
         </div>
-        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Controle de acesso por CNPJ</h1>
-        <p class="text-xs text-slate-500 mt-0.5">Aprove usuários e gerencie o vínculo de clientes no WhatsApp.</p>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Controle de acesso por CNPJ</h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Aprove usuários e gerencie o vínculo de clientes no WhatsApp.</p>
       </div>
 
       <button onclick="carregarUsuarios()" 
@@ -104,77 +134,77 @@
     </div>
 
     <!-- Banner Informativo de Conexão Supabase se Chaves Incompletas -->
-    <div id="configBanner" class="hidden bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-center justify-between text-amber-800 shadow-sm">
+    <div id="configBanner" class="hidden bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 p-4 rounded-xl flex items-center justify-between text-amber-800 dark:text-amber-300 shadow-sm">
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 text-sm">
+        <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 flex items-center justify-center text-amber-600 dark:text-amber-400 text-sm">
           <i class="fa-solid fa-triangle-exclamation"></i>
         </div>
         <div>
-          <p class="text-xs font-bold text-amber-900">Credenciais do Supabase Não Configuradas</p>
-          <p class="text-[11px] text-amber-700">Clique em "Configurar Supabase" para conectar à sua conta oficial.</p>
+          <p class="text-xs font-bold text-amber-900 dark:text-amber-200">Credenciais do Supabase Não Configuradas</p>
+          <p class="text-[11px] text-amber-700 dark:text-amber-400">Clique em "Configurar Supabase" para conectar à sua conta oficial.</p>
         </div>
       </div>
-      <button onclick="toggleConfigModal()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg transition">Configurar</button>
+      <button onclick="toggleConfigModal()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg transition cursor-pointer">Configurar</button>
     </div>
 
     <!-- ===================================================================== -->
-    <!-- 3. CARDS DE INDICADORES / METRICAS (KPIs Padrão Clean Moderno) -->
+    <!-- 3. CARDS DE INDICADORES / METRICAS (KPIs Padrão Clean / Dark) -->
     <!-- ===================================================================== -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       
       <!-- Card: Pendentes -->
-      <div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm hover:shadow transition">
+      <div class="bg-white dark:bg-[#161b22] p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow transition">
         <div class="flex items-center justify-between">
-          <p class="text-xs font-medium text-slate-500">Solicitações pendentes</p>
-          <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 border border-amber-200/60 flex items-center justify-center text-sm">
+          <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Solicitações pendentes</p>
+          <div class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60 flex items-center justify-center text-sm">
             <i class="fa-regular fa-clock"></i>
           </div>
         </div>
         <div class="mt-1">
-          <h3 id="statPendentes" class="text-3xl font-extrabold text-slate-900 tracking-tight">0</h3>
-          <p id="statPendentesDesc" class="text-[11px] text-slate-400 mt-1">Nenhuma solicitação em espera</p>
+          <h3 id="statPendentes" class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">0</h3>
+          <p id="statPendentesDesc" class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Nenhuma solicitação em espera</p>
         </div>
       </div>
 
       <!-- Card: Aprovados -->
-      <div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm hover:shadow transition">
+      <div class="bg-white dark:bg-[#161b22] p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow transition">
         <div class="flex items-center justify-between">
-          <p class="text-xs font-medium text-slate-500">Usuários aprovados</p>
-          <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200/60 flex items-center justify-center text-sm">
+          <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Usuários aprovados</p>
+          <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center text-sm">
             <i class="fa-regular fa-circle-check"></i>
           </div>
         </div>
         <div class="mt-1">
-          <h3 id="statAprovados" class="text-3xl font-extrabold text-slate-900 tracking-tight">0</h3>
-          <p class="text-[11px] text-slate-400 mt-1">Acesso liberado à plataforma</p>
+          <h3 id="statAprovados" class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">0</h3>
+          <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Acesso liberado à plataforma</p>
         </div>
       </div>
 
       <!-- Card: Bloqueados -->
-      <div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm hover:shadow transition">
+      <div class="bg-white dark:bg-[#161b22] p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow transition">
         <div class="flex items-center justify-between">
-          <p class="text-xs font-medium text-slate-500">Usuários bloqueados</p>
-          <div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 border border-rose-200/60 flex items-center justify-center text-sm">
+          <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Usuários bloqueados</p>
+          <div class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60 flex items-center justify-center text-sm">
             <i class="fa-solid fa-ban"></i>
           </div>
         </div>
         <div class="mt-1">
-          <h3 id="statBloqueados" class="text-3xl font-extrabold text-slate-900 tracking-tight">0</h3>
-          <p id="statBloqueadosDesc" class="text-[11px] text-slate-400 mt-1">Nenhum acesso bloqueado</p>
+          <h3 id="statBloqueados" class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">0</h3>
+          <p id="statBloqueadosDesc" class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Nenhum acesso bloqueado</p>
         </div>
       </div>
 
       <!-- Card: Total Registrado -->
-      <div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm hover:shadow transition">
+      <div class="bg-white dark:bg-[#161b22] p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow transition">
         <div class="flex items-center justify-between">
-          <p class="text-xs font-medium text-slate-500">Total registrado</p>
-          <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 border border-slate-200/70 flex items-center justify-center text-sm">
+          <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Total registrado</p>
+          <div class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/70 dark:border-slate-700/60 flex items-center justify-center text-sm">
             <i class="fa-solid fa-users"></i>
           </div>
         </div>
         <div class="mt-1">
-          <h3 id="statTotal" class="text-3xl font-extrabold text-slate-900 tracking-tight">0</h3>
-          <p class="text-[11px] text-slate-400 mt-1">Usuários cadastrados no painel</p>
+          <h3 id="statTotal" class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">0</h3>
+          <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Usuários cadastrados no painel</p>
         </div>
       </div>
 
@@ -183,52 +213,52 @@
     <!-- ===================================================================== -->
     <!-- 4. CARD CONTAINER PRINCIPAL DA TABELA (Usuários e permissões) -->
     <!-- ===================================================================== -->
-    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden flex flex-col">
+    <div class="bg-white dark:bg-[#161b22] rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors">
       
       <!-- Cabeçalho da Seção -->
-      <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div class="flex items-center gap-2.5">
-            <h2 class="text-base font-bold text-slate-900">Usuários e permissões</h2>
-            <span id="badgeContadorGeral" class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-semibold border border-slate-200">
+            <h2 class="text-base font-bold text-slate-900 dark:text-white">Usuários e permissões</h2>
+            <span id="badgeContadorGeral" class="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[11px] font-semibold border border-slate-200 dark:border-slate-700">
               0 usuários
             </span>
           </div>
-          <p class="text-xs text-slate-500 mt-0.5">Gerencie os acessos e os CNPJs autorizados de cada usuário.</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Gerencie os acessos e os CNPJs autorizados de cada usuário.</p>
         </div>
-        <div class="text-[11px] font-medium text-slate-400 hidden sm:block">
+        <div class="text-[11px] font-medium text-slate-400 dark:text-slate-500 hidden sm:block">
           Vínculo de clientes WhatsApp
         </div>
       </div>
 
       <!-- Barra de Filtros, Abas e Busca -->
-      <div class="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+      <div class="px-6 py-4 bg-slate-50/50 dark:bg-[#12161f]/70 border-b border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
         
         <!-- Abas com Pílulas Modernas -->
         <div class="flex flex-wrap items-center gap-1.5">
           
           <button onclick="setTab('pendente')" id="tabPendente" 
-            class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition flex items-center gap-2 cursor-pointer">
+            class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer">
             <span>Pendentes</span>
-            <span id="countTabPendente" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 text-slate-600">0</span>
+            <span id="countTabPendente" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400">0</span>
           </button>
 
           <button onclick="setTab('aprovado')" id="tabAprovado" 
-            class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 text-red-600 border border-red-200/70 transition flex items-center gap-2 shadow-xs cursor-pointer">
+            class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-red-600 dark:text-red-400 border border-red-200/70 dark:border-red-900/60 transition flex items-center gap-2 shadow-xs cursor-pointer">
             <span>Aprovados</span>
-            <span id="countTabAprovado" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-700">0</span>
+            <span id="countTabAprovado" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-red-100 dark:bg-red-900/60 text-red-700 dark:text-red-300">0</span>
           </button>
 
           <button onclick="setTab('bloqueado')" id="tabBloqueado" 
-            class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition flex items-center gap-2 cursor-pointer">
+            class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer">
             <span>Bloqueados</span>
-            <span id="countTabBloqueado" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 text-slate-600">0</span>
+            <span id="countTabBloqueado" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400">0</span>
           </button>
 
           <button onclick="setTab('todos')" id="tabTodos" 
-            class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition flex items-center gap-2 cursor-pointer">
+            class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer">
             <span>Todos</span>
-            <span id="countTabTodos" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 text-slate-600">0</span>
+            <span id="countTabTodos" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400">0</span>
           </button>
 
         </div>
@@ -238,8 +268,8 @@
           <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
           <input type="text" id="searchInput" oninput="filtrarUsuarios()" 
             placeholder="Buscar por nome, CPF, WhatsApp ou CNPJ..." 
-            class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 shadow-xs transition" />
-          <button id="clearSearchBtn" onclick="limparBusca()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+            class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 shadow-xs transition" />
+          <button id="clearSearchBtn" onclick="limparBusca()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
@@ -247,12 +277,12 @@
       </div>
 
       <!-- ================================================================= -->
-      <!-- 5. TABELA DE DADOS ELEGANTE -->
+      <!-- 5. TABELA DE DADOS ELEGANTE (LIGHT / DARK) -->
       <!-- ================================================================= -->
       <div class="overflow-x-auto flex-1 min-h-[300px]">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="bg-slate-50/75 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <tr class="bg-slate-50/75 dark:bg-slate-900/60 border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               <th class="py-3 px-6">Usuário / WhatsApp</th>
               <th class="py-3 px-4">CPF</th>
               <th class="py-3 px-4">Solicitado em</th>
@@ -261,7 +291,7 @@
               <th class="py-3 px-6 text-right">Ações</th>
             </tr>
           </thead>
-          <tbody id="listaUsuarios" class="divide-y divide-slate-100 text-xs">
+          <tbody id="listaUsuarios" class="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
             <!-- Loading State Padrão -->
             <tr>
               <td colspan="6" class="py-16 text-center text-slate-400">
@@ -276,23 +306,23 @@
       <!-- ================================================================= -->
       <!-- 6. RODAPÉ DA TABELA: PAGINAÇÃO E CONTAGEM -->
       <!-- ================================================================= -->
-      <div class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+      <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
         <div id="paginacaoInfo">
           Exibindo 0 de 0 usuários
         </div>
 
         <div id="paginacaoControles" class="flex items-center gap-1.5">
           <button onclick="mudarPagina(-1)" id="btnPagAnt" 
-            class="w-7 h-7 rounded-lg border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+            class="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer">
             <i class="fa-solid fa-chevron-left text-[10px]"></i>
           </button>
           
           <div id="paginacaoNumeros" class="flex items-center gap-1">
-            <span class="w-7 h-7 rounded-lg bg-rose-50 text-red-600 font-bold border border-red-200/70 flex items-center justify-center text-xs">1</span>
+            <span class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-red-600 dark:text-red-400 font-bold border border-red-200/70 dark:border-red-900/60 flex items-center justify-center text-xs">1</span>
           </div>
 
           <button onclick="mudarPagina(1)" id="btnPagProx" 
-            class="w-7 h-7 rounded-lg border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+            class="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer">
             <i class="fa-solid fa-chevron-right text-[10px]"></i>
           </button>
         </div>
@@ -303,12 +333,12 @@
     <!-- ===================================================================== -->
     <!-- 7. FOOTER DA PÁGINA -->
     <!-- ===================================================================== -->
-    <footer class="mt-4 pt-4 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400 font-medium">
+    <footer class="mt-4 pt-4 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400 dark:text-slate-500 font-medium">
       <div class="flex items-center gap-1.5">
-        <i class="fa-solid fa-shield-halved text-slate-400"></i>
+        <i class="fa-solid fa-shield-halved text-slate-400 dark:text-slate-500"></i>
         <span>Controle de acesso seguro por CNPJ</span>
       </div>
-      <div class="font-bold text-slate-500 text-[10px] uppercase tracking-wider">
+      <div class="font-bold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">
         LE LOGÍSTICA ESPECIALIZADA
       </div>
     </footer>
@@ -319,53 +349,53 @@
   <!-- 8. MODAL MODERNO: GERENCIADOR DE MÚLTIPLOS CNPJs DO USUÁRIO -->
   <!-- ===================================================================== -->
   <div id="cnpjModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white max-w-xl w-full p-6 rounded-2xl shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-150">
+    <div class="bg-white dark:bg-[#161b22] max-w-xl w-full p-6 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 relative animate-in fade-in zoom-in-95 duration-150">
       
       <!-- Topo Modal -->
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-red-50 text-red-600 border border-red-200/60 flex items-center justify-center text-sm">
+          <div class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200/60 dark:border-red-900/60 flex items-center justify-center text-sm">
             <i class="fa-solid fa-building-shield"></i>
           </div>
           <div>
-            <h3 class="text-sm font-bold text-slate-900">Vincular CNPJs ao Usuário</h3>
-            <p id="cnpjModalUserSubtitle" class="text-[11px] text-slate-500 font-medium">Usuário: Carregando...</p>
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Vincular CNPJs ao Usuário</h3>
+            <p id="cnpjModalUserSubtitle" class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Usuário: Carregando...</p>
           </div>
         </div>
-        <button onclick="fecharModalCnpj()" class="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
+        <button onclick="fecharModalCnpj()" class="w-7 h-7 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center transition cursor-pointer">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
 
       <!-- Caixa explicativa sobre regra de raiz de 8 dígitos -->
-      <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3 mb-4 text-[11px] text-slate-600 leading-relaxed">
+      <div class="bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3 mb-4 text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
         <div class="flex items-start gap-2">
           <i class="fa-solid fa-circle-info text-blue-500 mt-0.5 text-xs"></i>
           <div>
-            <strong class="text-slate-800">Regra de Liberação Automática por Raiz:</strong><br/>
-            Ao liberar o CNPJ de um cliente (ex: <code class="bg-slate-200/80 text-slate-800 px-1 py-0.5 rounded font-mono">08.958.628/0001-06</code> da Oncoexo), o bot libera todas as notas da mesma raiz (<code class="bg-slate-200/80 text-slate-800 px-1 py-0.5 rounded font-mono">08.958.628/...</code>). Se o usuário possuir apenas 1 CNPJ vinculado, ele consulta direto sem menu no WhatsApp!
+            <strong class="text-slate-800 dark:text-white">Regra de Liberação Automática por Raiz:</strong><br/>
+            Ao liberar o CNPJ de um cliente (ex: <code class="bg-slate-200/80 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-1 py-0.5 rounded font-mono">08.958.628/0001-06</code> da Oncoexo), o bot libera todas as notas da mesma raiz (<code class="bg-slate-200/80 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-1 py-0.5 rounded font-mono">08.958.628/...</code>). Se o usuário possuir apenas 1 CNPJ vinculado, ele consulta direto sem menu no WhatsApp!
           </div>
         </div>
       </div>
 
       <!-- Atalhos Rápidos -->
       <div class="mb-4">
-        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Atalhos de Clientes Conhecidos (Clique para ativar/remover)</label>
+        <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Atalhos de Clientes Conhecidos (Clique para ativar/remover)</label>
         <div id="atalhosCnpjContainer" class="flex flex-wrap gap-1.5"></div>
       </div>
 
       <!-- Campo para Digitar Novo CNPJ Livremente -->
-      <div class="bg-slate-50/70 border border-slate-200 rounded-xl p-3 mb-4">
-        <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-2">
+      <div class="bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-3 mb-4">
+        <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
           <i class="fa-solid fa-plus text-red-500 mr-1"></i> Digitar Novo CNPJ de Cliente Futuro
         </label>
         <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
           <input type="text" id="novoCnpjNome" placeholder="Nome do Cliente (ex: ONCOEXO)" 
-            class="sm:col-span-5 bg-white border border-slate-200 text-slate-800 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500" />
+            class="sm:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500" />
           <input type="text" id="novoCnpjNumero" placeholder="CNPJ (00.000.000/0000-00)" maxlength="18" oninput="mascaraCnpjInput(this)"
-            class="sm:col-span-5 bg-white border border-slate-200 text-slate-800 text-xs font-mono rounded-lg px-3 py-2 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500" />
+            class="sm:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white text-xs font-mono rounded-lg px-3 py-2 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500" />
           <button type="button" onclick="adicionarCnpjCustomizadoModal()" 
-            class="sm:col-span-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-lg px-3 py-2 transition flex items-center justify-center gap-1 cursor-pointer">
+            class="sm:col-span-2 bg-slate-900 hover:bg-black dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs rounded-lg px-3 py-2 transition flex items-center justify-center gap-1 cursor-pointer">
             <i class="fa-solid fa-plus text-[10px]"></i> Adicionar
           </button>
         </div>
@@ -373,13 +403,13 @@
 
       <!-- Lista de CNPJs Selecionados -->
       <div class="mb-5">
-        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">CNPJs Atribuídos a este Usuário</label>
-        <div id="listaCnpjsSelecionadosModal" class="min-h-[48px] bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex flex-wrap gap-1.5 items-center"></div>
+        <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">CNPJs Atribuídos a este Usuário</label>
+        <div id="listaCnpjsSelecionadosModal" class="min-h-[48px] bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 flex flex-wrap gap-1.5 items-center"></div>
       </div>
 
       <!-- Ações do Modal -->
-      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-        <button type="button" onclick="fecharModalCnpj()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-xl transition cursor-pointer">Cancelar</button>
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+        <button type="button" onclick="fecharModalCnpj()" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium rounded-xl transition cursor-pointer">Cancelar</button>
         <button type="button" onclick="salvarCnpjsModal(false)" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-xl transition cursor-pointer">Apenas Salvar CNPJs</button>
         <button type="button" onclick="salvarCnpjsModal(true)" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-md shadow-red-600/20 transition flex items-center gap-1.5 cursor-pointer">
           <i class="fa-solid fa-check"></i> Salvar & Aprovar Usuário
@@ -393,39 +423,39 @@
   <!-- 9. MODAL MODERNO: EDITAR USUÁRIO (Nome e CPF) -->
   <!-- ===================================================================== -->
   <div id="editarModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white max-w-md w-full p-6 rounded-2xl shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-150">
+    <div class="bg-white dark:bg-[#161b22] max-w-md w-full p-6 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 relative animate-in fade-in zoom-in-95 duration-150">
       
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-200/60 flex items-center justify-center text-sm">
+          <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/60 flex items-center justify-center text-sm">
             <i class="fa-solid fa-pen-to-square"></i>
           </div>
           <div>
-            <h3 class="text-sm font-bold text-slate-900">Editar Dados do Usuário</h3>
-            <p id="editModalSubtitle" class="text-[11px] text-slate-500 font-mono"></p>
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Editar Dados do Usuário</h3>
+            <p id="editModalSubtitle" class="text-[11px] text-slate-500 dark:text-slate-400 font-mono"></p>
           </div>
         </div>
-        <button onclick="fecharModalEdicao()" class="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
+        <button onclick="fecharModalEdicao()" class="w-7 h-7 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center transition cursor-pointer">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
 
       <div class="space-y-3.5">
         <div>
-          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Nome Completo</label>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Nome Completo</label>
           <input type="text" id="editNomeInput" placeholder="Nome do cliente" 
-            class="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500" />
+            class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500" />
         </div>
         <div>
-          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">CPF (11 números)</label>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">CPF (11 números)</label>
           <input type="text" id="editCpfInput" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCpfInput(this)"
-            class="w-full bg-white border border-slate-200 text-slate-800 text-xs font-mono rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500" />
+            class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white text-xs font-mono rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500" />
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100 mt-5">
-        <button type="button" onclick="fecharModalEdicao()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-xl transition cursor-pointer">Cancelar</button>
-        <button type="button" onclick="salvarEdicaoUsuario()" class="px-4 py-2 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-xl transition cursor-pointer">Salvar Alterações</button>
+      <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800 mt-5">
+        <button type="button" onclick="fecharModalEdicao()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium rounded-xl transition cursor-pointer">Cancelar</button>
+        <button type="button" onclick="salvarEdicaoUsuario()" class="px-4 py-2 bg-slate-900 hover:bg-black dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition cursor-pointer">Salvar Alterações</button>
       </div>
 
     </div>
@@ -435,17 +465,17 @@
   <!-- 10. MODAL MODERNO: CONFIRMAÇÃO ELEGANTE (Exclusão e Admin) -->
   <!-- ===================================================================== -->
   <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white max-w-sm w-full p-6 rounded-2xl shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-150 text-center">
+    <div class="bg-white dark:bg-[#161b22] max-w-sm w-full p-6 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 relative animate-in fade-in zoom-in-95 duration-150 text-center">
       
-      <div id="confirmModalIcon" class="w-12 h-12 rounded-2xl bg-rose-50 text-red-600 border border-red-200/80 mx-auto flex items-center justify-center text-xl mb-3">
+      <div id="confirmModalIcon" class="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-red-600 dark:text-red-400 border border-red-200/80 dark:border-red-900/60 mx-auto flex items-center justify-center text-xl mb-3">
         <i class="fa-solid fa-triangle-exclamation"></i>
       </div>
 
-      <h3 id="confirmModalTitle" class="text-sm font-bold text-slate-900 mb-1">Confirmação</h3>
-      <p id="confirmModalText" class="text-xs text-slate-500 mb-5 leading-relaxed">Você tem certeza que deseja executar esta ação?</p>
+      <h3 id="confirmModalTitle" class="text-sm font-bold text-slate-900 dark:text-white mb-1">Confirmação</h3>
+      <p id="confirmModalText" class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">Você tem certeza que deseja executar esta ação?</p>
 
       <div class="flex items-center justify-center gap-2">
-        <button type="button" onclick="fecharModalConfirmacao()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-xl transition cursor-pointer w-full">Cancelar</button>
+        <button type="button" onclick="fecharModalConfirmacao()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium rounded-xl transition cursor-pointer w-full">Cancelar</button>
         <button type="button" id="confirmModalBtnAction" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer w-full">Confirmar</button>
       </div>
 
@@ -456,37 +486,37 @@
   <!-- 11. MODAL CONFIGURAÇÃO SUPABASE -->
   <!-- ===================================================================== -->
   <div id="configModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white max-w-md w-full p-6 rounded-2xl shadow-2xl border border-slate-200 relative">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+    <div class="bg-white dark:bg-[#161b22] max-w-md w-full p-6 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 relative">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-3">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <i class="fa-solid fa-database text-red-600"></i> Configuração do Supabase
         </h3>
-        <button onclick="toggleConfigModal()" class="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
+        <button onclick="toggleConfigModal()" class="w-7 h-7 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center transition cursor-pointer">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
       
-      <p class="text-xs text-slate-500 mb-4">Insira os parâmetros de conexão do projeto no Supabase para gerenciar a tabela <code class="text-red-600 bg-red-50 px-1 py-0.5 rounded font-mono font-bold">usuarios_whatsapp</code>.</p>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Insira os parâmetros de conexão do projeto no Supabase para gerenciar a tabela <code class="text-red-600 bg-red-50 dark:bg-red-950/40 px-1 py-0.5 rounded font-mono font-bold">usuarios_whatsapp</code>.</p>
       
       <div class="space-y-3.5">
         <div>
-          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">SUPABASE URL</label>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">SUPABASE URL</label>
           <input type="text" id="cfgUrl" placeholder="https://xyzcompany.supabase.co" 
-            class="w-full bg-white border border-slate-200 text-slate-800 text-xs font-mono rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-red-500" />
+            class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white text-xs font-mono rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-red-500" />
         </div>
         <div>
-          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">SUPABASE ANON / PUBLISHABLE KEY</label>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">SUPABASE ANON / PUBLISHABLE KEY</label>
           <input type="password" id="cfgKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5..." 
-            class="w-full bg-white border border-slate-200 text-slate-800 text-xs font-mono rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-red-500" />
+            class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white text-xs font-mono rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-red-500" />
         </div>
       </div>
 
-      <div class="mt-6 flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100">
-        <button type="button" onclick="restaurarPadrao()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-red-600 text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer">
+      <div class="mt-6 flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+        <button type="button" onclick="restaurarPadrao()" class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-red-600 text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer">
           <i class="fa-solid fa-arrow-rotate-left text-[11px]"></i> Restaurar Oficial
         </button>
         <div class="flex items-center gap-2">
-          <button type="button" onclick="toggleConfigModal()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-xl transition cursor-pointer">Cancelar</button>
+          <button type="button" onclick="toggleConfigModal()" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium rounded-xl transition cursor-pointer">Cancelar</button>
           <button type="button" onclick="salvarConfiguracoes()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer">Salvar & Conectar</button>
         </div>
       </div>
@@ -497,7 +527,7 @@
   <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- ===================================================================== -->
-  <!-- 12. JAVASCRIPT: LÓGICA E INTEGRAÇÃO SUPABASE 100% PRESERVADA E TURBINADA -->
+  <!-- 12. JAVASCRIPT: LÓGICA E INTEGRAÇÃO SUPABASE + SUPORTE A TEMA DARK -->
   <!-- ===================================================================== -->
   <script>
     // Catálogo Base de Clientes / CNPJs
@@ -511,7 +541,7 @@
       { code: 'ONCOEXO PA:08958628000610', name: 'ONCOEXO PA (08.958.628/0006-10)' }
     ];
 
-    const CONFIG_VERSION = 'v4_2026_redesign';
+    const CONFIG_VERSION = 'v5_2026_dark_mode';
     const DEFAULT_SUPABASE_URL = 'https://hfnpghxxaugqiyvnqqev.supabase.co';
     const DEFAULT_SUPABASE_KEY = 'sb_publishable_WVXgO2IkqBoed58ZBtW0nw_C0YZvpHJ';
     const OLD_DEPRECATED_REF = 'fpcobqmjcohzwjiqfpzc';
@@ -531,6 +561,39 @@
     let modalSelectedCodes = [];
     let modalEditTarget = null;
     let confirmCallback = null;
+
+    // =====================================================================
+    // GESTÃO DE TEMA (DARK / LIGHT)
+    // =====================================================================
+    function initTheme() {
+      const savedTheme = localStorage.getItem('THEME_MODE') || 'light';
+      aplicarTema(savedTheme);
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const newTheme = isDark ? 'light' : 'dark';
+      aplicarTema(newTheme);
+      showToast(`Tema ${newTheme === 'dark' ? 'Escuro' : 'Claro'} ativado!`, 'info');
+    }
+
+    function aplicarTema(theme) {
+      const html = document.documentElement;
+      const icon = document.getElementById('themeToggleIcon');
+      const text = document.getElementById('themeToggleText');
+
+      if (theme === 'dark') {
+        html.classList.add('dark');
+        localStorage.setItem('THEME_MODE', 'dark');
+        if (icon) icon.className = 'fa-solid fa-sun text-amber-400 text-xs';
+        if (text) text.innerText = 'Tema Claro';
+      } else {
+        html.classList.remove('dark');
+        localStorage.setItem('THEME_MODE', 'light');
+        if (icon) icon.className = 'fa-solid fa-moon text-slate-400 text-xs';
+        if (text) text.innerText = 'Tema Escuro';
+      }
+    }
 
     function getCustomEmpresasSalvas() {
       try {
@@ -610,6 +673,8 @@
 
     // Inicialização do Painel
     window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+
       let savedUrl = (localStorage.getItem('SUPABASE_URL') || '').trim();
       let savedKey = (localStorage.getItem('SUPABASE_KEY') || '').trim();
       const currentConfigVersion = localStorage.getItem('CONFIG_VERSION');
@@ -682,7 +747,7 @@
       }
       try {
         realtimeChannel = supabaseClient
-          .channel('usuarios_whatsapp_changes_v4')
+          .channel('usuarios_whatsapp_changes_v5')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios_whatsapp' }, () => {
             carregarUsuariosSilencioso();
           })
@@ -726,9 +791,9 @@
             <td colspan="6" class="py-12 px-6 text-center">
               <div class="max-w-md mx-auto flex flex-col items-center">
                 <i class="fa-solid fa-triangle-exclamation text-rose-500 text-3xl mb-2"></i>
-                <p class="font-bold text-xs text-rose-700">Falha ao consultar tabela usuarios_whatsapp</p>
+                <p class="font-bold text-xs text-rose-700 dark:text-rose-400">Falha ao consultar tabela usuarios_whatsapp</p>
                 <p class="text-[11px] text-slate-500 mt-1 mb-3 font-mono">${err.message}</p>
-                <button onclick="restaurarPadrao()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-xs shadow transition">
+                <button onclick="restaurarPadrao()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-xs shadow transition cursor-pointer">
                   Reconectar ao Supabase Oficial
                 </button>
               </div>
@@ -799,11 +864,11 @@
         if (!btn) return;
 
         if (t === tab) {
-          btn.className = "px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 text-red-600 border border-red-200/70 transition flex items-center gap-2 shadow-xs cursor-pointer";
-          if (badge) badge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-700";
+          btn.className = "px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-red-600 dark:text-red-400 border border-red-200/70 dark:border-red-900/60 transition flex items-center gap-2 shadow-xs cursor-pointer";
+          if (badge) badge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-red-100 dark:bg-red-900/60 text-red-700 dark:text-red-300";
         } else {
-          btn.className = "px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition flex items-center gap-2 cursor-pointer";
-          if (badge) badge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 text-slate-600";
+          btn.className = "px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer";
+          if (badge) badge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400";
         }
       });
 
@@ -859,14 +924,12 @@
       const totalItens = usuariosFiltrados.length;
       const totalPaginas = Math.ceil(totalItens / ITENS_POR_PAGINA) || 1;
 
-      // Ajusta página se passar do limite
       if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
 
       const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
       const fim = Math.min(inicio + ITENS_POR_PAGINA, totalItens);
       const paginaItens = usuariosFiltrados.slice(inicio, fim);
 
-      // Atualiza controles de paginação
       const infoEl = document.getElementById('paginacaoInfo');
       if (infoEl) {
         infoEl.innerText = totalItens === 0 
@@ -882,10 +945,10 @@
       const numContainer = document.getElementById('paginacaoNumeros');
       if (numContainer) {
         numContainer.innerHTML = `
-          <span class="w-7 h-7 rounded-lg bg-rose-50 text-red-600 font-bold border border-red-200/70 flex items-center justify-center text-xs">
+          <span class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-red-600 dark:text-red-400 font-bold border border-red-200/70 dark:border-red-900/60 flex items-center justify-center text-xs">
             ${paginaAtual}
           </span>
-          ${totalPaginas > 1 ? `<span class="text-xs text-slate-400 font-medium">de ${totalPaginas}</span>` : ''}
+          ${totalPaginas > 1 ? `<span class="text-xs text-slate-400 dark:text-slate-500 font-medium">de ${totalPaginas}</span>` : ''}
         `;
       }
 
@@ -893,11 +956,11 @@
         tbody.innerHTML = `
           <tr>
             <td colspan="6" class="py-16 text-center text-slate-400">
-              <div class="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200/60 mx-auto flex items-center justify-center text-slate-400 text-lg mb-2">
+              <div class="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 mx-auto flex items-center justify-center text-slate-400 text-lg mb-2">
                 <i class="fa-regular fa-folder-open"></i>
               </div>
-              <p class="font-semibold text-slate-700 text-xs">Nenhum registro encontrado</p>
-              <p class="text-[11px] text-slate-400 mt-0.5">Não há usuários na aba atual com os filtros selecionados.</p>
+              <p class="font-semibold text-slate-700 dark:text-slate-300 text-xs">Nenhum registro encontrado</p>
+              <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Não há usuários na aba atual com os filtros selecionados.</p>
             </td>
           </tr>`;
         return;
@@ -938,17 +1001,17 @@
         let badgeHtml = '';
         if (u.status === 'pendente') {
           badgeHtml = `
-            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 text-[11px] font-semibold">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/60 text-[11px] font-semibold">
               <i class="fa-regular fa-clock text-[10px]"></i> Pendente
             </span>`;
         } else if (u.status === 'aprovado') {
           badgeHtml = `
-            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[11px] font-semibold">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/60 text-[11px] font-semibold">
               <i class="fa-solid fa-check text-[10px]"></i> Aprovado
             </span>`;
         } else {
           badgeHtml = `
-            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200/80 text-[11px] font-semibold">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200/80 dark:border-rose-800/60 text-[11px] font-semibold">
               <i class="fa-solid fa-ban text-[10px]"></i> Bloqueado
             </span>`;
         }
@@ -959,7 +1022,7 @@
           botaoAcaoPrincipal = `
             <button onclick="alterarStatus('${u.chat_id}', 'bloqueado')" 
               title="Suspender acesso deste usuário"
-              class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 hover:text-slate-900 font-medium text-xs transition flex items-center gap-1.5 cursor-pointer">
+              class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-xs transition flex items-center gap-1.5 cursor-pointer">
               <i class="fa-solid fa-ban text-slate-500 text-[11px]"></i> Bloquear
             </button>`;
         } else {
@@ -972,29 +1035,29 @@
         }
 
         return `
-          <tr class="hover:bg-slate-50/80 transition-colors">
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
             
             <!-- 1. Usuário / WhatsApp -->
             <td class="py-3.5 px-6">
-              <div class="font-bold text-slate-900 text-xs flex items-center gap-2">
+              <div class="font-bold text-slate-900 dark:text-white text-xs flex items-center gap-2">
                 <span>${u.nome || 'Sem Nome'}</span>
-                ${u.is_admin ? '<span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold flex items-center gap-1"><i class="fa-solid fa-shield-halved text-[8px]"></i> Admin</span>' : ''}
+                ${u.is_admin ? '<span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900/60 text-[9px] font-bold flex items-center gap-1"><i class="fa-solid fa-shield-halved text-[8px]"></i> Admin</span>' : ''}
               </div>
-              <div class="text-slate-400 text-[11px] font-mono flex items-center gap-1 mt-0.5">
+              <div class="text-slate-400 dark:text-slate-500 text-[11px] font-mono flex items-center gap-1 mt-0.5">
                 <i class="fa-brands fa-whatsapp text-emerald-500 text-xs"></i>
                 <span class="truncate max-w-[200px]" title="${u.chat_id}">${cleanPhone}</span>
               </div>
             </td>
 
             <!-- 2. CPF -->
-            <td class="py-3.5 px-4 font-mono font-medium text-slate-700 text-xs whitespace-nowrap">
+            <td class="py-3.5 px-4 font-mono font-medium text-slate-700 dark:text-slate-300 text-xs whitespace-nowrap">
               ${cpfFmt}
             </td>
 
             <!-- 3. Solicitado em -->
             <td class="py-3.5 px-4 text-xs whitespace-nowrap leading-tight">
-              <div class="font-medium text-slate-700">${dataFmt}</div>
-              <div class="text-[11px] text-slate-400 font-mono">${horaFmt}</div>
+              <div class="font-medium text-slate-700 dark:text-slate-300">${dataFmt}</div>
+              <div class="text-[11px] text-slate-400 dark:text-slate-500 font-mono">${horaFmt}</div>
             </td>
 
             <!-- 4. Status -->
@@ -1004,17 +1067,17 @@
 
             <!-- 5. CNPJs Autorizados -->
             <td class="py-3.5 px-6 min-w-[280px]">
-              <div class="font-semibold text-slate-800 text-xs mb-1 truncate" title="${u.cnpj_autorizado || ''}">
+              <div class="font-semibold text-slate-800 dark:text-slate-200 text-xs mb-1 truncate" title="${u.cnpj_autorizado || ''}">
                 ${cnpjSummary}
               </div>
               <div class="flex items-center gap-1.5">
                 <select id="cnpj_select_${safeId}" onchange="salvarSelectRapido('${u.chat_id}', this.value)"
-                  class="flex-1 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-[11px] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer shadow-xs">
+                  class="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-700 dark:text-slate-200 text-[11px] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-red-500 cursor-pointer shadow-xs">
                   ${optionsHtml}
                 </select>
                 <button onclick="abrirModalCnpj('${u.chat_id}')" 
                   title="Gerenciar / Adicionar múltiplos CNPJs para este cliente"
-                  class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-red-600 border border-red-200/70 text-[11px] font-bold transition flex items-center gap-1 whitespace-nowrap cursor-pointer shadow-xs">
+                  class="px-2.5 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-red-600 dark:text-red-400 border border-red-200/70 dark:border-red-900/60 text-[11px] font-bold transition flex items-center gap-1 whitespace-nowrap cursor-pointer shadow-xs">
                   <i class="fa-solid fa-plus text-[9px]"></i> CNPJ
                 </button>
               </div>
@@ -1025,26 +1088,26 @@
               <div class="flex items-center justify-end gap-1.5">
                 ${botaoAcaoPrincipal}
 
-                <div class="h-5 w-px bg-slate-200 mx-0.5"></div>
+                <div class="h-5 w-px bg-slate-200 dark:bg-slate-800 mx-0.5"></div>
 
                 <!-- Botão Admin -->
                 <button onclick="confirmarAlternarAdmin('${u.chat_id}', '${u.nome ? u.nome.replace(/'/g, "\\'") : ''}', ${!!u.is_admin})" 
                   title="${u.is_admin ? 'Remover Permissão de Admin' : 'Tornar Administrador'}" 
-                  class="p-1.5 w-7 h-7 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition flex items-center justify-center cursor-pointer">
-                  <i class="fa-solid fa-shield-halved text-[11px] ${u.is_admin ? 'text-blue-600' : ''}"></i>
+                  class="p-1.5 w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center justify-center cursor-pointer">
+                  <i class="fa-solid fa-shield-halved text-[11px] ${u.is_admin ? 'text-blue-600 dark:text-blue-400' : ''}"></i>
                 </button>
 
                 <!-- Botão Editar Nome/CPF -->
                 <button onclick="abrirModalEdicao('${u.chat_id}', '${u.nome ? u.nome.replace(/'/g, "\\'") : ''}', '${u.cpf || ''}')" 
                   title="Editar Nome ou CPF" 
-                  class="p-1.5 w-7 h-7 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition flex items-center justify-center cursor-pointer">
+                  class="p-1.5 w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center justify-center cursor-pointer">
                   <i class="fa-solid fa-pen text-[11px]"></i>
                 </button>
 
                 <!-- Botão Excluir -->
                 <button onclick="confirmarExcluirUsuario('${u.chat_id}', '${u.nome ? u.nome.replace(/'/g, "\\'") : ''}')" 
                   title="Excluir Usuário" 
-                  class="p-1.5 w-7 h-7 rounded-lg border border-slate-200 hover:bg-rose-50 text-slate-600 hover:text-red-600 transition flex items-center justify-center cursor-pointer">
+                  class="p-1.5 w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition flex items-center justify-center cursor-pointer">
                   <i class="fa-regular fa-trash-can text-[11px]"></i>
                 </button>
               </div>
@@ -1151,7 +1214,7 @@
     }
 
     // Confirmações Elegantes
-    function abrirModalConfirmacao({ titulo, texto, icone, textoBotao, corBotao, onConfirm }) {
+    function abrirModalConfirmacao({ titulo, texto, textoBotao, corBotao, onConfirm }) {
       document.getElementById('confirmModalTitle').innerText = titulo;
       document.getElementById('confirmModalText').innerText = texto;
       
@@ -1295,24 +1358,24 @@
           <button type="button" onclick="alternarAtalhoModal('${item.code.replace(/'/g, "\\'")}')"
             class="px-2.5 py-1 rounded-lg text-[11px] font-medium border transition cursor-pointer ${
               ativo
-                ? 'bg-red-50 text-red-700 border-red-300 shadow-xs font-semibold'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                ? 'bg-red-50 dark:bg-rose-950/40 text-red-700 dark:text-red-400 border-red-300 dark:border-red-900/60 shadow-xs font-semibold'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
             }">
-            ${ativo ? '<i class="fa-solid fa-check text-[9px] mr-1 text-red-600"></i>' : ''}${item.name}
+            ${ativo ? '<i class="fa-solid fa-check text-[9px] mr-1 text-red-600 dark:text-red-400"></i>' : ''}${item.name}
           </button>
         `;
       }).join('');
 
       const selEl = document.getElementById('listaCnpjsSelecionadosModal');
       if (modalSelectedCodes.length === 0) {
-        selEl.innerHTML = `<span class="text-xs text-slate-400 italic">Nenhum CNPJ selecionado. Escolha um atalho acima ou digite um novo CNPJ.</span>`;
+        selEl.innerHTML = `<span class="text-xs text-slate-400 dark:text-slate-500 italic">Nenhum CNPJ selecionado. Escolha um atalho acima ou digite um novo CNPJ.</span>`;
         return;
       }
 
       selEl.innerHTML = modalSelectedCodes.map(code => `
-        <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 shadow-xs">
+        <div class="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-800 dark:text-slate-200 shadow-xs">
           <span class="font-medium">${code === 'ALL' ? 'Todos os CNPJs (Acesso global)' : code.replace(':', ' • ')}</span>
-          <button type="button" onclick="removerCnpjSelecionadoModal('${code.replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-red-600 ml-1 cursor-pointer">
+          <button type="button" onclick="removerCnpjSelecionadoModal('${code.replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-red-600 dark:hover:text-red-400 ml-1 cursor-pointer">
             <i class="fa-solid fa-xmark text-[11px]"></i>
           </button>
         </div>
@@ -1355,19 +1418,17 @@
       const toast = document.createElement('div');
 
       let icon = 'fa-circle-info text-blue-500';
-      let border = 'border-slate-200';
       if (tipo === 'success') {
         icon = 'fa-circle-check text-emerald-500';
       } else if (tipo === 'error') {
         icon = 'fa-circle-exclamation text-red-500';
       }
 
-      toast.className = `pointer-events-auto bg-white border ${border} px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-xs text-slate-800 font-medium min-w-[280px] max-w-sm transition-all duration-200 transform translate-y-2 opacity-0`;
+      toast.className = `pointer-events-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-xs text-slate-800 dark:text-slate-100 font-medium min-w-[280px] max-w-sm transition-all duration-200 transform translate-y-2 opacity-0`;
       toast.innerHTML = `<i class="fa-solid ${icon} text-base shrink-0"></i> <span class="leading-tight">${mensagem}</span>`;
 
       container.appendChild(toast);
       
-      // Animação de entrada
       requestAnimationFrame(() => {
         toast.classList.remove('translate-y-2', 'opacity-0');
       });
